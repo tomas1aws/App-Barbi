@@ -1,13 +1,13 @@
 import Link from 'next/link'
 import { useRouter } from 'next/router'
 import { useEffect, useState } from 'react'
-import AlfajorForm from '../../components/AlfajorForm'
-import { fetchAlfajorById, updateAlfajor } from '../../lib/alfajoresApi'
+import VinoForm from '../../components/VinoForm'
+import { fetchVinoById, updateVino } from '../../lib/vinosApi'
 
-export default function EditAlfajorPage() {
+export default function EditVinoPage() {
   const router = useRouter()
   const { id } = router.query
-  const [alfajor, setAlfajor] = useState(null)
+  const [vino, setVino] = useState(null)
   const [error, setError] = useState('')
   const [successMessage, setSuccessMessage] = useState('')
 
@@ -16,8 +16,8 @@ export default function EditAlfajorPage() {
 
     async function load() {
       try {
-        const data = await fetchAlfajorById(id)
-        setAlfajor(data)
+        const data = await fetchVinoById(id)
+        setVino(data)
       } catch (err) {
         setError(err.message)
       }
@@ -30,49 +30,49 @@ export default function EditAlfajorPage() {
     setError('')
     setSuccessMessage('')
 
-    const editId = alfajor?.id ?? id
+    const editId = vino?.id ?? id
 
     if (!editId || typeof editId !== 'string') {
       setError('ID faltante')
       return
     }
 
-    console.log('EDIT id:', editId)
-
     try {
       const normalizedPayload = {
         name: payload.name,
-        brand: payload.brand,
+        winery: payload.winery,
+        varietal: payload.varietal,
+        year: payload.year,
         rating: payload.rating,
         review: payload.review,
-        degustado_en: payload.degustado_en || null,
+        catado_en: payload.catado_en || null,
       }
 
-      if (payload.image_path && payload.image_path !== alfajor?.image_path) {
+      if (payload.image_path && payload.image_path !== vino?.image_path) {
         normalizedPayload.image_path = payload.image_path
       }
 
-      const updated = await updateAlfajor(editId, normalizedPayload)
-      setSuccessMessage('Alfajor actualizado correctamente')
-      router.push(`/alfajores/${editId}`)
+      await updateVino(editId, normalizedPayload)
+      setSuccessMessage('Vino actualizado correctamente')
+      router.push(`/vinos/${editId}`)
     } catch (err) {
       setError(err.message)
       throw err
     }
   }
 
-  if (error && !alfajor) return <main className="p-4 text-red-600">{error}</main>
-  if (!alfajor) return <main className="p-4">Cargando...</main>
+  if (error && !vino) return <main className="p-4 text-red-600">{error}</main>
+  if (!vino) return <main className="p-4">Cargando...</main>
 
   return (
     <main className="mx-auto min-h-screen max-w-xl p-4">
       <div className="mb-4 flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Editar Alfajor</h1>
-        <Link href={`/alfajores/${alfajor?.id ?? id}`} className="text-orange-600">
+        <h1 className="text-2xl font-bold">Editar Vino</h1>
+        <Link href={`/vinos/${vino?.id ?? id}`} className="text-orange-600">
           Volver
         </Link>
       </div>
-      <AlfajorForm initialValues={alfajor} onSubmit={handleUpdate} submitText="Guardar cambios" />
+      <VinoForm initialValues={vino} onSubmit={handleUpdate} submitText="Guardar cambios" />
       {successMessage && <p className="mt-3 text-sm text-green-700">{successMessage}</p>}
       {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
     </main>

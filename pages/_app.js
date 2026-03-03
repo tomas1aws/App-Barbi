@@ -8,9 +8,7 @@ export default function App({ Component, pageProps }) {
       navigator.serviceWorker
         .getRegistrations()
         .then((registrations) => registrations.forEach((registration) => registration.unregister()))
-        .catch(() => {
-          // noop: debug page muestra errores de red; no rompemos UI por cleanup de SW
-        })
+        .catch(() => {})
     }
   }, [])
 
@@ -19,7 +17,7 @@ export default function App({ Component, pageProps }) {
       <Head>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta name="theme-color" content="#f97316" />
-        <meta name="description" content="Biblioteca de alfajores App-Ceci" />
+        <meta name="description" content="Biblioteca de vinos App-Barbi" />
       </Head>
       <Component {...pageProps} />
     </>
