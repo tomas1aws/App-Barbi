@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/router'
 import { useEffect, useState } from 'react'
 import StarRating from '../../components/StarRating'
-import { deleteVino, fetchVinoById } from '../../lib/vinosApi'
+import { createSignedImageUrl, deleteVino, fetchVinoById } from '../../lib/vinosApi'
 
 function formatCatadoEn(catadoEn) {
   if (!catadoEn) return '—'
@@ -15,6 +15,7 @@ export default function VinoDetailPage() {
   const router = useRouter()
   const { id } = router.query
   const [vino, setVino] = useState(null)
+  const [imageUrlCache, setImageUrlCache] = useState({})
   const [error, setError] = useState('')
 
   useEffect(() => {
@@ -23,7 +24,20 @@ export default function VinoDetailPage() {
     async function load() {
       try {
         const data = await fetchVinoById(id)
-        setVino(data)
+        let imageUrl = null
+
+        if (data?.image_path) {
+          imageUrl = imageUrlCache[data.image_path] || (await createSignedImageUrl(data.image_path))
+        }
+
+        if (data?.image_path && imageUrl) {
+          setImageUrlCache((previousCache) => ({
+            ...previousCache,
+            [data.image_path]: imageUrl,
+          }))
+        }
+
+        setVino({ ...data, imageUrl })
       } catch (err) {
         setError(err.message)
       }
@@ -58,11 +72,11 @@ export default function VinoDetailPage() {
 
   return (
     <main className="mx-auto min-h-screen max-w-2xl space-y-4 p-4">
-      <img
-        src={vino.image_path || 'https://placehold.co/600x400?text=Sin+Foto'}
-        alt={vino.name}
-        className="h-72 w-full rounded-xl object-cover"
-      />
+      {vino.imageUrl ? (
+        <img src={vino.imageUrl} alt={vino.name} className="h-72 w-full rounded-xl object-cover" />
+      ) : (
+        <div className="flex h-72 w-full items-center justify-center rounded-xl bg-slate-100 text-slate-500">Sin Foto</div>
+      )}
       <h1 className="text-3xl font-bold">{vino.name}</h1>
       <p className="text-lg text-slate-700">Bodega: {vino.winery || 'Sin bodega'}</p>
       <p className="text-lg text-slate-700">Varietal: {vino.varietal || 'Sin varietal'}</p>
