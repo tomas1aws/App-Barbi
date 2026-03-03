@@ -1,14 +1,16 @@
 import { useState } from 'react'
 import StarRating from './StarRating'
-import { uploadImage } from '../lib/alfajoresApi'
+import { uploadImage } from '../lib/vinosApi'
 
-export default function AlfajorForm({ onSubmit, initialValues = {}, submitText = 'Guardar' }) {
+export default function VinoForm({ onSubmit, initialValues = {}, submitText = 'Guardar' }) {
   const [name, setName] = useState(initialValues.name || '')
-  const [brand, setBrand] = useState(initialValues.brand || '')
+  const [winery, setWinery] = useState(initialValues.winery || '')
+  const [varietal, setVarietal] = useState(initialValues.varietal || '')
+  const [year, setYear] = useState(initialValues.year || '')
   const [rating, setRating] = useState(initialValues.rating || 0)
   const [review, setReview] = useState(initialValues.review || '')
   const [imagePath, setImagePath] = useState(initialValues.image_path || '')
-  const [degustadoEn, setDegustadoEn] = useState(initialValues.degustado_en || '')
+  const [catadoEn, setCatadoEn] = useState(initialValues.catado_en || '')
   const [loading, setLoading] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
 
@@ -37,11 +39,13 @@ export default function AlfajorForm({ onSubmit, initialValues = {}, submitText =
     try {
       await onSubmit({
         name,
-        brand,
+        winery,
+        varietal,
+        year: year === '' ? null : Number(year),
         rating,
         review,
         image_path: imagePath,
-        degustado_en: degustadoEn || null,
+        catado_en: catadoEn || null,
       })
     } catch (error) {
       setErrorMessage(error.message)
@@ -54,16 +58,25 @@ export default function AlfajorForm({ onSubmit, initialValues = {}, submitText =
     <form className="space-y-4 rounded-xl bg-white p-4 shadow" onSubmit={handleSubmit}>
       <div>
         <label className="mb-1 block text-sm font-medium">Nombre</label>
-        <input
-          className="w-full rounded border p-2"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          required
-        />
+        <input className="w-full rounded border p-2" value={name} onChange={(e) => setName(e.target.value)} required />
       </div>
       <div>
-        <label className="mb-1 block text-sm font-medium">Marca</label>
-        <input className="w-full rounded border p-2" value={brand} onChange={(e) => setBrand(e.target.value)} />
+        <label className="mb-1 block text-sm font-medium">Bodega</label>
+        <input className="w-full rounded border p-2" value={winery} onChange={(e) => setWinery(e.target.value)} />
+      </div>
+      <div>
+        <label className="mb-1 block text-sm font-medium">Varietal</label>
+        <input className="w-full rounded border p-2" value={varietal} onChange={(e) => setVarietal(e.target.value)} />
+      </div>
+      <div>
+        <label className="mb-1 block text-sm font-medium">Año</label>
+        <input
+          type="number"
+          min="0"
+          className="w-full rounded border p-2"
+          value={year}
+          onChange={(e) => setYear(e.target.value)}
+        />
       </div>
       <div>
         <label className="mb-1 block text-sm font-medium">Puntuación</label>
@@ -79,13 +92,13 @@ export default function AlfajorForm({ onSubmit, initialValues = {}, submitText =
         />
       </div>
       <div>
-        <label className="mb-1 block text-sm font-medium">Fecha de degustación</label>
+        <label className="mb-1 block text-sm font-medium">Fecha de cata</label>
         <input
           type="date"
-          name="degustado_en"
+          name="catado_en"
           className="w-full rounded border p-2"
-          value={degustadoEn}
-          onChange={(e) => setDegustadoEn(e.target.value)}
+          value={catadoEn}
+          onChange={(e) => setCatadoEn(e.target.value)}
         />
       </div>
       <div>
