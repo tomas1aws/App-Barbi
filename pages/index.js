@@ -1,10 +1,11 @@
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import VinoCard from '../components/VinoCard'
-import { fetchVinos } from '../lib/vinosApi'
+import { createSignedImageUrl, fetchVinos } from '../lib/vinosApi'
 
 export default function HomePage() {
   const [vinos, setVinos] = useState([])
+  const [imageUrlCache, setImageUrlCache] = useState({})
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
@@ -12,7 +13,33 @@ export default function HomePage() {
     async function load() {
       try {
         const data = await fetchVinos()
-        setVinos(data)
+
+        const winesWithImageUrl = await Promise.all(
+          data.map(async (vino) => {
+            if (!vino.image_path) {
+              return { ...vino, imageUrl: null }
+            }
+
+            if (imageUrlCache[vino.image_path]) {
+              return { ...vino, imageUrl: imageUrlCache[vino.image_path] }
+            }
+
+            const signedUrl = await createSignedImageUrl(vino.image_path)
+            return { ...vino, imageUrl: signedUrl }
+          })
+        )
+
+        setImageUrlCache((previousCache) => {
+          const nextCache = { ...previousCache }
+          winesWithImageUrl.forEach((vino) => {
+            if (vino.image_path && vino.imageUrl) {
+              nextCache[vino.image_path] = vino.imageUrl
+            }
+          })
+          return nextCache
+        })
+
+        setVinos(winesWithImageUrl)
       } catch (err) {
         setError(err.message)
       } finally {

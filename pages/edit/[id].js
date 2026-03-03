@@ -2,12 +2,14 @@ import Link from 'next/link'
 import { useRouter } from 'next/router'
 import { useEffect, useState } from 'react'
 import VinoForm from '../../components/VinoForm'
-import { fetchVinoById, updateVino } from '../../lib/vinosApi'
+import { createSignedImageUrl, fetchVinoById, removeImage, updateVino } from '../../lib/vinosApi'
 
 export default function EditVinoPage() {
   const router = useRouter()
   const { id } = router.query
   const [vino, setVino] = useState(null)
+  const [initialImageUrl, setInitialImageUrl] = useState('')
+  const [imageUrlCache, setImageUrlCache] = useState({})
   const [error, setError] = useState('')
   const [successMessage, setSuccessMessage] = useState('')
 
@@ -17,6 +19,17 @@ export default function EditVinoPage() {
     async function load() {
       try {
         const data = await fetchVinoById(id)
+
+        if (data?.image_path) {
+          const cached = imageUrlCache[data.image_path]
+          const signedUrl = cached || (await createSignedImageUrl(data.image_path))
+
+          if (signedUrl) {
+            setInitialImageUrl(signedUrl)
+            setImageUrlCache((previousCache) => ({ ...previousCache, [data.image_path]: signedUrl }))
+          }
+        }
+
         setVino(data)
       } catch (err) {
         setError(err.message)
@@ -53,6 +66,11 @@ export default function EditVinoPage() {
       }
 
       await updateVino(editId, normalizedPayload)
+
+      if (normalizedPayload.image_path && vino?.image_path && normalizedPayload.image_path !== vino.image_path) {
+        await removeImage(vino.image_path)
+      }
+
       setSuccessMessage('Vino actualizado correctamente')
       router.push(`/vinos/${editId}`)
     } catch (err) {
@@ -72,7 +90,7 @@ export default function EditVinoPage() {
           Volver
         </Link>
       </div>
-      <VinoForm initialValues={vino} onSubmit={handleUpdate} submitText="Guardar cambios" />
+      <VinoForm initialValues={vino} initialImageUrl={initialImageUrl} onSubmit={handleUpdate} submitText="Guardar cambios" />
       {successMessage && <p className="mt-3 text-sm text-green-700">{successMessage}</p>}
       {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
     </main>
